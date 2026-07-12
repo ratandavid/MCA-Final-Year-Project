@@ -159,10 +159,12 @@ export default function App() {
         }}
       />
 
-      {/* Floating screenshot button */}
-      <TouchableOpacity style={styles.screenshotBtn} onPress={takeScreenshot} activeOpacity={0.85}>
-        <Ionicons name="camera" size={22} color="#fff" />
-      </TouchableOpacity>
+      {/* Floating screenshot button — hidden on auth screens */}
+      {screen !== 'signup' && screen !== 'login' && (
+        <TouchableOpacity style={styles.screenshotBtn} onPress={takeScreenshot} activeOpacity={0.85}>
+          <Ionicons name="camera" size={22} color="#fff" />
+        </TouchableOpacity>
+      )}
     </ViewShot>
     </SafeAreaView>
     </SafeAreaProvider>
