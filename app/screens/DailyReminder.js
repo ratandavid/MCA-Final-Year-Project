@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Modal, ScrollView, Alert, Platform, LogBox, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Modal, ScrollView, Alert, Platform, LogBox } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
@@ -215,25 +215,6 @@ function DailyReminder(props) {
         await saveToStorage(updated);
     };
 
-    const [storageVisible, setStorageVisible] = useState(false);
-    const [storageData, setStorageData] = useState([]);
-
-    const viewStorageData = async () => {
-        try {
-            const keys = await AsyncStorage.getAllKeys();
-            const pairs = await AsyncStorage.multiGet(keys);
-            const parsed = pairs.map(([key, value]) => {
-                let parsed = value;
-                try { parsed = JSON.stringify(JSON.parse(value), null, 2); } catch {}
-                return { key, value: parsed };
-            });
-            setStorageData(parsed);
-            setStorageVisible(true);
-        } catch {
-            Alert.alert('Error', 'Could not read storage.');
-        }
-    };
-
     const openModal = () => {
         setTimeText(getNextRoundedTime());
         setActivityText('');
@@ -327,44 +308,7 @@ function DailyReminder(props) {
                         </View>
                     ))
                 )}
-                {/* Storage Evidence Button */}
-                <TouchableOpacity style={styles.storageBtn} onPress={viewStorageData}>
-                    <Ionicons name="server-outline" size={16} color="#fff" />
-                    <Text style={styles.storageBtnText}>View Local Storage Data</Text>
-                </TouchableOpacity>
             </ScrollView>
-
-            {/* Storage Evidence Modal */}
-            <Modal visible={storageVisible} transparent animationType="slide" onRequestClose={() => setStorageVisible(false)}>
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalCard, darkMode && styles.modalCardDark, { maxHeight: '85%' }]}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                            <Text style={[styles.modalTitle, darkMode && styles.modalTitleDark]}>AsyncStorage Data</Text>
-                            <TouchableOpacity onPress={() => setStorageVisible(false)}>
-                                <Ionicons name="close" size={22} color={darkMode ? '#fff' : '#333'} />
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={[styles.modalDate, darkMode && styles.modalDateDark]}>
-                            {storageData.length} key(s) stored on device
-                        </Text>
-                        <ScrollView style={{ marginTop: 8 }}>
-                            {storageData.length === 0 ? (
-                                <Text style={{ color: '#999', textAlign: 'center', padding: 20 }}>No data in storage yet.</Text>
-                            ) : (
-                                storageData.map(({ key, value }) => (
-                                    <View key={key} style={[styles.storageRow, darkMode && styles.storageRowDark]}>
-                                        <View style={styles.storageKeyRow}>
-                                            <Ionicons name="key-outline" size={13} color="#6C63FF" />
-                                            <Text style={styles.storageKey}>{key}</Text>
-                                        </View>
-                                        <Text style={[styles.storageValue, darkMode && styles.storageValueDark]}>{value}</Text>
-                                    </View>
-                                ))
-                            )}
-                        </ScrollView>
-                    </View>
-                </View>
-            </Modal>
 
             <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={closeModal}>
                 <View style={styles.modalOverlay}>
@@ -457,21 +401,6 @@ const styles = StyleSheet.create({
     modalCancelTextDark: { color: '#aaa' },
     modalSaveButton: { backgroundColor: '#6C63FF', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 18, marginLeft: 8 },
     modalSaveText: { color: '#fff', fontWeight: '600' },
-    storageBtn: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: '#4CAF50', borderRadius: 10, paddingVertical: 12,
-        marginTop: 24, gap: 8,
-    },
-    storageBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-    storageRow: {
-        backgroundColor: '#F5F4FF', borderRadius: 8, padding: 12,
-        marginBottom: 10, borderLeftWidth: 3, borderLeftColor: '#6C63FF',
-    },
-    storageRowDark: { backgroundColor: '#1E1B3A' },
-    storageKeyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-    storageKey: { fontSize: 12, fontWeight: '700', color: '#6C63FF' },
-    storageValue: { fontSize: 11, color: '#444', fontFamily: 'monospace' },
-    storageValueDark: { color: '#ccc' },
 });
 
 export default DailyReminder;
