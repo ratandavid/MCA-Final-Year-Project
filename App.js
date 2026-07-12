@@ -1,7 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { useState, useRef } from 'react';
+import { StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import ViewShot from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
+import { Ionicons } from '@expo/vector-icons';
 import SignUp from './app/screens/SignUp';
 import Login from './app/screens/Login';
 import Home from './app/screens/Home';
@@ -21,6 +24,22 @@ export default function App() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
+  const viewShotRef = useRef(null);
+
+  const takeScreenshot = async () => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Please allow media library access to save screenshots.');
+        return;
+      }
+      const uri = await viewShotRef.current.capture();
+      await MediaLibrary.saveToLibraryAsync(uri);
+      Alert.alert('Screenshot Saved', 'Your screenshot has been saved to your gallery.');
+    } catch {
+      Alert.alert('Error', 'Could not take screenshot. Please try again.');
+    }
+  };
 
   const toggleFavorite = (meditation) => {
     setFavorites((current) => {
@@ -52,6 +71,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
     <SafeAreaView style={styles.container}>
+    <ViewShot ref={viewShotRef} style={styles.viewShot} options={{ format: 'jpg', quality: 0.95 }}>
       {screen === 'signup' && (
         <SignUp
           registeredUser={registeredUser}
@@ -133,17 +153,17 @@ export default function App() {
         onLogout={handleLogout}
         onSelectItem={(key) => {
           setSidebarVisible(false);
-          if (key === 'favourite') {
-            setScreen('myfav');
-          }
-          if (key === 'settings') {
-            setScreen('darktheme');
-          }
-          if (key === 'reminders') {
-            setScreen('reminders');
-          }
+          if (key === 'favourite') setScreen('myfav');
+          if (key === 'settings') setScreen('darktheme');
+          if (key === 'reminders') setScreen('reminders');
         }}
       />
+
+      {/* Floating screenshot button */}
+      <TouchableOpacity style={styles.screenshotBtn} onPress={takeScreenshot} activeOpacity={0.85}>
+        <Ionicons name="camera" size={22} color="#fff" />
+      </TouchableOpacity>
+    </ViewShot>
     </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -155,5 +175,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  viewShot: {
+    flex: 1,
+    width: '100%',
+  },
+  screenshotBtn: {
+    position: 'absolute',
+    bottom: 28,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#6C63FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
 });
